@@ -1,7 +1,9 @@
-# Ignore .out files
-**/*.out
+# Ignore compiled .out files
+*.out
 
-# Ignore files with no extension
-**/*
-!**/*.*
+# Ignore compiled binaries with no extension
+*
 
+# But keep source files and folders
+!*.c
+!*/
