@@ -143,3 +143,37 @@ time(&rawtime);             // Get current time
 timeinfo = localtime(&rawtime); // Convert to struct tm
 printf("Connected at: %s", asctime(timeinfo)); // Print readable string
 ```
+
+## 4. Glossary: New Variables & Functions
+
+### **Variables**
+- **`FILE *`**
+  - **Type**: Pointer to a `FILE` structure.
+  - **Purpose**: A "handle" used to identify a file stream for reading/writing.
+- **`time_t`**
+  - **Type**: Arithmetic type (usually long integer).
+  - **Purpose**: Stores system time as seconds since Epoch (Jan 1, 1970).
+- **`struct tm`**
+  - **Type**: Structure.
+  - **Purpose**: Holds broken-down time components (tm_sec, tm_min, tm_hour, tm_mday, tm_mon, tm_year, etc.).
+
+### **Functions**
+- **`fopen(filename, mode)`**
+  - **Library**: `<stdio.h>`.
+  - **Purpose**: Opens a file. Modes: `"r"` (read), `"w"` (write/truncate), `"a"` (append). Returns `NULL` on failure.
+- **`fprintf(file_ptr, format, ...)`**
+  - **Library**: `<stdio.h>`.
+  - **Purpose**: Writes formatted output to a file stream (like `printf` but to a file).
+- **`fclose(file_ptr)`**
+  - **Library**: `<stdio.h>`.
+  - **Purpose**: Closes a file stream and flushes any buffered data.
+- **`time(&t)`**
+  - **Library**: `<time.h>`.
+  - **Purpose**: Stores the current calendar time in `t`.
+- **`localtime(&t)`**
+  - **Library**: `<time.h>`.
+  - **Purpose**: Converts a `time_t` value to a `struct tm` in local time.
+- **`asctime(tm_struct)`**
+  - **Library**: `<time.h>`.
+  - **Purpose**: Converts a `struct tm` to a human-readable string (e.g., "Mon Jan 01...").
+

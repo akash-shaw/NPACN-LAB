@@ -228,3 +228,37 @@ char *result = search_dns(buffer);
 // Sends result back
 write(newsockfd, result, strlen(result));
 ```
+
+## 4. Glossary: New Variables & Functions
+
+### **Variables**
+- **`pid_t`**
+  - **Type**: Signed integer type.
+  - **Purpose**: Represents Process IDs. Used for the return value of `fork()`.
+- **`struct sockaddr_in`**
+  - **Type**: Structure.
+  - **Purpose**: Holds IPv4 address information (family, port, IP). Needed for `bind`, `connect`, etc.
+- **`socklen_t`**
+  - **Type**: Unsigned integer type (at least 32 bits).
+  - **Purpose**: Used to store the size of the address structure. Passed by pointer to `accept` and `recvfrom`.
+
+### **Functions**
+- **`fork()`**
+  - **Library**: `<unistd.h>`.
+  - **Purpose**: Duplicates the current process. Returns `0` to the child and the child's PID to the parent.
+- **`exit(status)`**
+  - **Library**: `<stdlib.h>`.
+  - **Purpose**: Terminates the process. `status` is sent to the parent (retrievable via `wait`).
+- **`waitpid(pid, &status, options)`**
+  - **Library**: `<sys/wait.h>`.
+  - **Purpose**: Waits for a *specific* child process to change state. Useful for preventing zombies.
+- **`sendto(sockfd, buf, len, flags, dest_addr, addrlen)`**
+  - **Library**: `<sys/socket.h>`.
+  - **Purpose**: Sends a datagram to a specific address. Primary sending function for UDP.
+- **`recvfrom(sockfd, buf, len, flags, src_addr, &addrlen)`**
+  - **Library**: `<sys/socket.h>`.
+  - **Purpose**: Receives a datagram and fills `src_addr` with the sender's details. Primary receiving function for UDP.
+- **`strcspn(str, reject)`**
+  - **Library**: `<string.h>`.
+  - **Purpose**: Calculates the length of the initial segment of `str` which consists entirely of characters not in `reject`. Used here to find the index of `\n` to remove it: `buf[strcspn(buf, "\n")] = 0`.
+

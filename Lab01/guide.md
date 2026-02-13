@@ -83,10 +83,28 @@ main()
     printf("\n");   // Print a new line
     
 
-    // 6. Close Connection
-    close(sockfd);  // Close the socket and free resources
-}
-```
+## Detailed Variable & Function Explanation
+
+### Variables
+*   **`sockfd`**: (Socket File Descriptor) An integer ID given by the OS to track your open network connection. Like a "ticket number".
+*   **`struct sockaddr_in`**: A built-in C structure for IPv4 addresses.
+    *   `.sin_family`: Always `AF_INET` (IPv4).
+    *   `.sin_port`: The port number (must use `htons`).
+    *   `.sin_addr.s_addr`: The IP Address (must use `inet_addr`).
+*   **`buffer`** / **`buff`**: A character array (`char[]`) used as a temporary holding area for data being sent or received.
+*   **`AF_INET`**: Address Family for Internet (IPv4).
+*   **`SOCK_STREAM`**: Socket Type for TCP streams.
+*   **`SOCK_DGRAM`**: Socket Type for UDP datagrams.
+
+### Functions
+*   **`socket(domain, type, protocol)`**: Creates the endpoint. Returns -1 on error.
+*   **`bind(sockfd, addr, len)`**: (Server only) Reserves a specific port (like 3388) so clients can find you.
+*   **`listen(sockfd, backlog)`**: (Server only) Tells OS to start queuing incoming calls.
+*   **`accept(sockfd, addr, len)`**: (Server only) Answers the phone. Returns a *new* `newsockfd` specific to that one caller.
+*   **`connect(sockfd, addr, len)`**: (Client only) Dials the server's number.
+*   **`htons(port)`**: Reorders the bytes of the port number so the network understands it (Big Endian).
+*   **`inet_addr("127.0.0.1")`**: Converts a text string IP "127.0.0.1" into the raw binary number the network card needs.
+
 
 ---
 

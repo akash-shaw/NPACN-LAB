@@ -71,3 +71,34 @@ The receiver recalculates the parity bits based on the received data.
 *   If P4 is wrong, add 4 to `error_pos`.
 
 **Result:** The final value of `error_pos` tells you strictly **which bit location has the error**. If it's 0, no error. If it's 7, bit 7 is flipped—so we flip it back to correct it.
+
+## 4. Glossary: New Variables & Functions
+
+### **Variables**
+- **`data[]` / `msg[]`**
+  - **Type**: Character array (string) or Integer array.
+  - **Purpose**: Holds the original message bits (e.g., "1010").
+- **`divisor[]` / `gen[]`**
+  - **Type**: Character array.
+  - **Purpose**: Holds the generator polynomial bits for CRC (e.g., "1101").
+- **`rem[]`**
+  - **Type**: Character array.
+  - **Purpose**: Stores the Remainder after Modulo-2 division. This becomes the check bits.
+- **`codeword[]`**
+  - **Type**: Array.
+  - **Purpose**: The final packet sent to receiver (Data + Check Bits).
+
+### **Functions**
+- **`xor(a, b)`**
+  - **Logic**: Returns 0 if a==b, 1 if a!=b.
+  - **Purpose**: The fundamental operation for CRC and Parity. Replaces subtraction.
+- **`crc(data, divisor)`**
+  - **Logic**: Performs binary division using XOR.
+  - **Purpose**: Calculates the remainder (FCS - Frame Check Sequence) to append to data.
+- **`hamming_calc(data, parity)`**
+  - **Logic**: checks specific bit positions (powers of 2) to set parity bits.
+  - **Purpose**: Generates the redundancy bits needed to allow error correction.
+- **`pow(base, exp)`**
+  - **Library**: `<math.h>`.
+  - **Purpose**: Calculates $base^{exp}$. Used to find bit positions ($2^0, 2^1, 2^2...$).
+

@@ -392,24 +392,21 @@ Same logic as above, but using UDP.
 
 ## Detailed Variable & Function Explanation
 
-### `FILE *fp`
-*   **What:** File Pointer. It's the handle used by C to read/write files on the disk.
-*   **Functions:** `fopen("name", "r")` (opens for reading), `fclose` (closes), `fscanf` (reads formatted text), `fprintf` (writes formatted text).
-*   **Why used:** To read the text file content for searching or replacing words.
+### Variables
+*   **`FILE *fp`**: A pointer to a file structure used by C to handle file I/O.
+*   **`filename`**: A character array holding the name of the file to open (e.g., "data.txt").
+*   **`access()`**: Determines if the calling process can access the file pathname. `F_OK` tests for existence.
 
-### `ftell` and `fseek`
-*   **What:** Functions to navigate inside a file.
-*   **Why used:** In `sort_file`, `fseek(fp, 0, SEEK_END)` jumps to the very end of the file. Then `ftell(fp)` tells us the byte position (which equals the file size). Then `rewind` jumps back to start. This is a common trick to find file size.
-
-### `setsockopt(..., SO_REUSEADDR, ...)`
-*   **What:** Sets a socket option.
-*   **Why used:** When you stop a server, the OS sometimes keeps the port "held" for a few seconds (TIME_WAIT state). If you try to run the server again immediately, `bind` will fail. This option tells the OS "Let me reuse this port immediately."
-
-### `access(filename, F_OK)`
-*   **What:** System call to check file accessibility.
-*   **Arguments:** `F_OK` checks for existence. `R_OK` checks if readable.
-*   **Returns:** 0 if true, -1 if false.
-*   **Why used:** To verify the client asks for a file that actually exists before trying to open it.
+### Functions
+*   **`fopen(filename, mode)`**: Opens a file. Modes: `"r"` (read), `"w"` (write - erases existing!), `"a"` (append). Returns `NULL` on failure.
+*   **`fclose(fp)`**: Closes the file. Always close files!
+*   **`fseek(fp, offset, whence)`**: Moves the file pointer.
+    *   `SEEK_SET`: Start of file.
+    *   `SEEK_CUR`: Current position.
+    *   `SEEK_END`: End of file.
+*   **`ftell(fp)`**: Returns the current position in bytes from the start.
+*   **`rewind(fp)`**: Sets the position to the beginning (same as `fseek(..., 0, SEEK_SET)`).
+*   **`setsockopt(sock, level, optname, optval, optlen)`**: Configures socket behaviors. `SO_REUSEADDR` is the most common one used here.
 
 ### `send` vs `write` / `recv` vs `read`
 *   **Difference:** On Linux/Unix, sockets are files, so `read`/`write` work fine. `send`/`recv` are specific to sockets and take an extra `flags` argument (usually 0).

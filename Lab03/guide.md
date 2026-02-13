@@ -264,3 +264,36 @@ Splits work between Parent and Child process.
     }
 // ...
 ```
+
+## 4. Glossary: New Variables & Functions
+
+### **Variables**
+- **`pid_t`**
+  - **Type**: Data type (integer-like) used for process IDs.
+  - **Purpose**: Stores the return value of `fork()`.
+  - **Values**: positive (child PID), 0 (inside child), -1 (error).
+- **`int fd[2]`**
+  - **Type**: Integer array of size 2.
+  - **Purpose**: Used by `pipe()` to store file descriptors. `fd[0]` is for reading, `fd[1]` is for writing.
+
+### **Functions**
+- **`fork()`**
+  - **Library**: `<unistd.h>` (Linux/Unix).
+  - **Purpose**: Creates a new process (Child) by duplicating the calling process (Parent).
+  - **Key Behavior**: Returns twice! Once in parent, once in child.
+- **`getpid()` / `getppid()`**
+  - **Library**: `<unistd.h>`.
+  - **Purpose**: Returns the Process ID of the current process / Parent Process ID.
+- **`wait(NULL)`**
+  - **Library**: `<sys/wait.h>`.
+  - **Purpose**: Makes the parent process pause execution until one of its child processes terminates. Prevents "zombie" processes.
+- **`exit(0)`**
+  - **Library**: `<stdlib.h>`.
+  - **Purpose**: Terminates the current process immediately. Essential in child processes to prevent them from running parent code.
+- **`isalpha()`, `isdigit()`**
+  - **Library**: `<ctype.h>`.
+  - **Purpose**: Checks if a character is a letter or number. Helpful for sorting tasks.
+- **`qsort()`**
+  - **Library**: `<stdlib.h>`.
+  - **Purpose**: Standard library function to sort arrays. Requires a comparator function.
+
