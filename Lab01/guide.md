@@ -82,10 +82,84 @@ main()
     puts(buff);     // Print the received message to screen
     printf("\n");   // Print a new line
     
+
     // 6. Close Connection
     close(sockfd);  // Close the socket and free resources
 }
 ```
+
+---
+
+## 3. Two-Way Chat (`Conversation_Client_TCP.c`)
+
+This variation keeps the connection open for a continuous "chat" until one side types "stop".
+
+```c
+for (i = 0; ; i+=1) {
+    // 1. Send Message
+    scanf("%s", buff);
+    send(sockfd, buff, ...);
+
+    // Check for exit condition
+    if (buff[0] == 's' && buff[1] == 't' && buff[2] == 'o' && buff[3] == 'p') break;
+
+    // 2. Receive Reply
+    recv(sockfd, buff, ...);
+    printf("%s \n", buff);
+
+    if (strncmp(buff, "stop", 4) == 0) break;
+}
+```
+
+---
+
+## 4. UDP Implementations
+
+### Basic UDP Client (`udp_client.c`)
+Unlike TCP, UDP is connectionless. This client sends data character-by-character in a loop.
+*   **`sendto`**: Used instead of `send`. Requires the destination address every time.
+*   **`recvfrom`**: Used instead of `recv`. Captures the sender's address.
+
+```c
+for(k=0; k<=strlen(buff); k++) {
+    temp[0] = buff[k]; // Take one char
+    sendto(sockfd, temp, ...); // Send it as a packet
+}
+```
+
+### Chat UDP Client (`Conversation_Client_UDP.c`)
+Demonstrates a peer-to-peer style UDP chat where the client also `bind`s to a specific port (3389) to receive replies reliably.
+
+```c
+// Client binds to its own port
+clientaddr.sin_port = htons(3389);
+bind(sockfd, (struct sockaddr*)&clientaddr, ...);
+
+// Loop for Chat
+while(1) {
+    sendto(sockfd, buff, ..., &serveraddr, ...); // Send to Server (3388)
+    recvfrom(sockfd, buff, ..., &serveraddr, ...); // Receive from Server
+}
+```
+
+---
+
+## 5. Lab Exercises (`Lab01 Excercise/`)
+
+### Exercise 1: Array Menu (TCP) (`quo1/`)
+A menu-driven program where the client sends an array of integers and an operation code.
+1.  **Search:** Client sends `size`, `array`, `key`. Server returns index.
+2.  **Sort:** Client sends `order` (Asc/Desc). Server returns sorted array.
+    *   *Note:* The server does the heavy lifting (sorting), offloading work from the client.
+3.  **Split:** Server separates odd and even numbers and returns two new arrays.
+
+### Exercise 2: String Analysis (UDP) (`quo2/`)
+Client sends a string to a UDP server. The server analyzes it for:
+*   **Palindrome:** Checks if the string reads the same backwards.
+*   **Vowels:** Counts a, e, i, o, u.
+*   **Length:** Calculates string length.
+The results are formatted into a single string and sent back.
+
 
 ---
 
