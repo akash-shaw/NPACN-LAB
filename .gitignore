@@ -5,5 +5,8 @@
 *
 
 # But keep source files and folders
+!*.gitattributes
+!*.md
+!*.txt
 !*.c
 !*/
