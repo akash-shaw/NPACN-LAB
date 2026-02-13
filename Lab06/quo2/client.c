@@ -1,10 +1,12 @@
 #include <stdio.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <string.h>
 #include <stdlib.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-
-#define PORT 8082
+#define MAXSIZE 1024
 
 // Poly Definitions
 #define POLY_CRC12 "1100000001111" 
@@ -54,25 +56,29 @@ void crc_computation(char *input_data, char *output_rem, char *generator) {
 }
 
 int main() {
-    int sock = 0;
-    struct sockaddr_in serv_addr;
+    int sockfd, retval;
+    struct sockaddr_in serveraddr;
+    char buff[MAXSIZE];
     char data[100], generator[50], padded_data[200], checksum[50];
     char transmitted_data[200], error_data[200];
-    char buffer[1024];
     int choice;
+    int recedbytes, sentbytes;
 
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        printf("\n Socket creation error \n");
-        return -1;
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd == -1) {
+        printf("\nSocket Creation Error");
+        return 0;
     }
 
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT);
-    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    serveraddr.sin_family = AF_INET;
+    serveraddr.sin_port = htons(8082);
+    serveraddr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+    retval = connect(sockfd, (struct sockaddr *)&serveraddr, sizeof(serveraddr));
+    if (retval == -1) {
         printf("\nConnection Failed \n");
-        return -1;
+        close(sockfd);
+        return 0;
     }
 
     // --- INPUT ---
@@ -110,17 +116,34 @@ int main() {
 
     // --- SENDING ---
     // 1. Send Generator First
-    write(sock, generator, strlen(generator));
+    sentbytes = send(sockfd, generator, strlen(generator), 0);
+    if (sentbytes == -1) {
+        printf("Error sending generator");
+        close(sockfd);
+        return 0;
+    }
+
     // Sleep briefly to ensure separation or use fixed size
     usleep(100000); 
     
     // 2. Send Frame
-    write(sock, error_data, strlen(error_data));
+    sentbytes = send(sockfd, error_data, strlen(error_data), 0);
+    if (sentbytes == -1) {
+        printf("Error sending frame");
+        close(sockfd);
+        return 0;
+    }
 
     // --- RECEIVE RESPONSE ---
-    read(sock, buffer, 1024);
-    printf("\nServer Response: %s\n", buffer);
+    recedbytes = recv(sockfd, buff, MAXSIZE, 0);
+    if (recedbytes == -1) {
+        printf("Error receiving response");
+        close(sockfd);
+        return 0;
+    }
+    buff[recedbytes] = '\0';
+    printf("\nServer Response: %s\n", buff);
 
-    close(sock);
+    close(sockfd);
     return 0;
 }

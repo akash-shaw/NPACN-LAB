@@ -1,64 +1,83 @@
 #include <stdio.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
-#include <arpa/inet.h>
-#include <unistd.h>
 
+#define MAXSIZE 1024
 #define PORT 8083
 
 int main() {
-    int server_fd, new_socket;
-    struct sockaddr_in address;
-    int addrlen = sizeof(address);
+    int sockfd, newsockfd, retval;
+    socklen_t actuallen;
+    struct sockaddr_in serveraddr, clientaddr;
     int code[30], total_len, r=0;
+    int recedbytes, sentbytes;
 
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) exit(EXIT_FAILURE);
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd == -1) {
+        printf("\nSocket creation error");
+        exit(0);
+    }
     
     int opt=1;
-    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(PORT);
+    serveraddr.sin_family = AF_INET;
+    serveraddr.sin_addr.s_addr = htons(INADDR_ANY);
+    serveraddr.sin_port = htons(PORT);
 
-    bind(server_fd, (struct sockaddr *)&address, sizeof(address));
-    listen(server_fd, 3);
+    retval = bind(sockfd, (struct sockaddr *)&serveraddr, sizeof(serveraddr));
+    if (retval == -1) {
+        printf("Binding error");
+        close(sockfd);
+        exit(0);
+    }
+
+    retval = listen(sockfd, 3);
+    if (retval == -1) {
+        printf("Listen error");
+        close(sockfd);
+        exit(0);
+    }
 
     printf("\n--- HAMMING CODE SERVER ---\nWaiting...\n");
 
     while(1) {
-        new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen);
+        actuallen = sizeof(clientaddr);
+        newsockfd = accept(sockfd, (struct sockaddr *)&clientaddr, &actuallen);
+        if (newsockfd == -1) {
+            printf("Accept error");
+            close(sockfd);
+            exit(0);
+        }
 
         // 1. Receive Metadata
-        read(new_socket, &total_len, sizeof(int));
+        recedbytes = recv(newsockfd, &total_len, sizeof(int), 0);
+        if(recedbytes <= 0) {
+            close(newsockfd);
+            continue;
+        }
         
         // 2. Receive Code Array
-        read(new_socket, code, sizeof(int)*30);
+        recedbytes = recv(newsockfd, code, sizeof(int)*30, 0);
+        if(recedbytes <= 0) {
+            close(newsockfd);
+            continue;
+        }
 
         printf("\nReceived Code of length %d: ", total_len);
         for(int i=1; i<=total_len; i++) printf("%d", code[i]);
         printf("\n");
 
-        // 3. Determine r (reverse calc or just counting powers of 2 until > total_len)
-        r = 0;
-        while(pow(2, r) <= total_len) { // wait, if total_len is 7, r=3 (1,2,4). 2^3=8 > 7.
-             // Actually, strictly: m+r=total_len.
-             // We just need to know how many parity bits are checked.
-             // Standard: check all powers of 2 <= total_len.
-             if(pow(2, r) > total_len) break; // Optimization, but loop condition handles it
-             r++;
-        }
-        // Actually, the loop just needs to iterate i from 0 while 2^i <= total_len
-        // Let's stick to the Receiver Logic from original code which iterates based on r
-        // The sender calculated r such that 2^r >= total + 1.
-        // Let's recalculate r correctly.
+        // 3. Determine r
         int r_calc = 0;
         while ((1 << r_calc) <= total_len) { 
              r_calc++; 
         }
-        // Example: len=7 (bits 1..7). r should be 3 (1,2,4). 2^0=1, 2^1=2, 2^2=4.
-        // loop: i=0 (1<=7), i=1 (2<=7), i=2 (4<=7), i=3 (8>7). So r_calc becomes 3. Correct.
         
         // 4. Calculate Syndrome
         int error_pos = 0;
@@ -98,7 +117,9 @@ int main() {
         }
 
         printf("Outcome: %s\n", result);
-        send(new_socket, result, strlen(result), 0);
-        close(new_socket);
+        sentbytes = send(newsockfd, result, strlen(result), 0);
+        close(newsockfd);
     }
+    close(sockfd);
+    return 0;
 }

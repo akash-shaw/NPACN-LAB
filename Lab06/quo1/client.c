@@ -1,12 +1,13 @@
 #include <stdio.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <string.h>
 #include <stdlib.h>
-#include <arpa/inet.h>
-#include <unistd.h>
+#define MAXSIZE 1024
 
-#define PORT 8081
-
-// Function to count number of 1s in a binary string
 int count_ones(char *data) {
     int count = 0;
     for (int i = 0; i < strlen(data); i++) {
@@ -18,24 +19,27 @@ int count_ones(char *data) {
 }
 
 int main() {
-    int sock = 0;
-    struct sockaddr_in serv_addr;
+    int sockfd, retval;
+    struct sockaddr_in serveraddr;
+    char buff[MAXSIZE];
     char data[100];
     char transmitted_data[100];
     char error_data[100];
-    char buffer[1024] = {0};
     int parity_choice, ones, parity_bit;
+    int recedbytes, sentbytes;
 
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        printf("\n Socket creation error \n");
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd == -1) {
+        printf("\nSocket Creation Error");
         return -1;
     }
 
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT);
-    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    serveraddr.sin_family = AF_INET;
+    serveraddr.sin_port = htons(8081);
+    serveraddr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+    retval = connect(sockfd, (struct sockaddr *)&serveraddr, sizeof(serveraddr));
+    if (retval == -1) {
         printf("\nConnection Failed \n");
         return -1;
     }
@@ -60,7 +64,7 @@ int main() {
     }
 
     // specific send for parity choice first
-    write(sock, &parity_choice, sizeof(int));
+    send(sockfd, &parity_choice, sizeof(int), 0);
 
     // Construct Frame
     strcpy(transmitted_data, data);
@@ -75,13 +79,22 @@ int main() {
     scanf("%s", error_data);
 
     // Send
-    send(sock, error_data, strlen(error_data), 0);
+    sentbytes = send(sockfd, error_data, strlen(error_data), 0);
+    if (sentbytes == -1) {
+        printf("Error sending data");
+        close(sockfd);
+    }
     printf("Data sent to server.\n");
 
     // Receive Result
-    read(sock, buffer, 1024);
-    printf("\nServer Response: %s\n", buffer);
+    recedbytes = recv(sockfd, buff, MAXSIZE, 0);
+    if (recedbytes == -1) {
+         printf("Error receiving result");
+         close(sockfd);
+    }
+    buff[recedbytes] = '\0';
+    printf("\nServer Response: %s\n", buff);
 
-    close(sock);
+    close(sockfd);
     return 0;
 }

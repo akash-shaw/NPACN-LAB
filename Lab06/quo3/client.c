@@ -1,24 +1,40 @@
 #include <stdio.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
-#include <arpa/inet.h>
-#include <unistd.h>
 
+#define MAXSIZE 1024
 #define PORT 8083
 
 int main() {
-    int sock = 0;
-    struct sockaddr_in serv_addr;
-    int data[30], code[30], m, r=0, i, j, k;
+    int sockfd, retval;
+    struct sockaddr_in serveraddr;
+    int data[30], code[30];
+    int m, r=0, i, j, k;
+    int recedbytes, sentbytes;
+    char buff[MAXSIZE];
 
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) return -1;
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd == -1) {
+        printf("\nSocket Creation Error");
+        return 0;
+    }
 
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT);
-    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    serveraddr.sin_family = AF_INET;
+    serveraddr.sin_port = htons(PORT);
+    serveraddr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) return -1;
+    retval = connect(sockfd, (struct sockaddr *)&serveraddr, sizeof(serveraddr));
+    if (retval == -1) {
+        printf("\nConnection Failed \n");
+        close(sockfd);
+        return 0;
+    }
 
     // --- SENDER SIDE ---
     printf("\n--- HAMMING CODE CLIENT ---\n");
@@ -33,7 +49,7 @@ int main() {
     
     // 2. Input Data
     printf("Enter data bits (D1..Dm):\n");
-    // Start reading into a temp array or directly map
+    // Start reading into a temp array
     int temp_data[30];
     for(i=1; i<=m; i++) scanf("%d", &temp_data[i]);
     
@@ -78,14 +94,30 @@ int main() {
     }
 
     // 6. Send
-    write(sock, &total_len, sizeof(int));
-    write(sock, code, sizeof(int) * 30); // Send whole array for simplicity
+    sentbytes = send(sockfd, &total_len, sizeof(int), 0);
+    if(sentbytes == -1) {
+        printf("Error sending len");
+        close(sockfd);
+        return 0;
+    }
+    
+    sentbytes = send(sockfd, code, sizeof(int) * 30, 0); // Send whole array for simplicity
+    if(sentbytes == -1) {
+        printf("Error sending code");
+        close(sockfd);
+        return 0;
+    }
 
     // 7. Receive Result
-    char buffer[1024] = {0};
-    read(sock, buffer, 1024);
-    printf("\nServer Response:\n%s\n", buffer);
+    recedbytes = recv(sockfd, buff, MAXSIZE, 0);
+    if(recedbytes == -1) {
+        printf("Error receiving");
+        close(sockfd);
+        return 0;
+    }
+    buff[recedbytes] = '\0';
+    printf("\nServer Response:\n%s\n", buff);
 
-    close(sock);
+    close(sockfd);
     return 0;
 }
