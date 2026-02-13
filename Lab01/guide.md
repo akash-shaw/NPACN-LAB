@@ -81,7 +81,7 @@ main()
     
     puts(buff);     // Print the received message to screen
     printf("\n");   // Print a new line
-    
+  ```
 
 ## Detailed Variable & Function Explanation
 
