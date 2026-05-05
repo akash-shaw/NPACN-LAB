@@ -1,0 +1,35 @@
+Windows
+server side:
+gcc -o server Full-duplex_with_win_thread_server.c -lws2_32
+
+server.exe
+
+
+
+
+Client side:
+gcc -o client Full-duplex_with_win_thread_client.c -lws2_32
+
+client.exe
+
+
+
+Linux:
+Server Side:
+gcc -o full_duplex_server Full-duplex_with_linux_thread_server.c -pthread
+
+./full_duplex_server
+
+Client Side:
+gcc -o full_duplex_client Full-duplex_with_linux_thread_client.c -pthread
+
+./full_duplex_client
+
+
+
+What is Winsock?
+
+Winsock (short for Windows Sockets) is Microsoft's implementation of the Berkeley Sockets API for networking. It allows developers to write programs that communicate over a network using standard protocols like TCP, UDP, and IP.
+
+    ws2_32 refers to Windows Sockets version 2.32, which is a part of Winsock 2.
+    It is a dynamic-link library (DLL) on Windows: ws2_32.dll.
